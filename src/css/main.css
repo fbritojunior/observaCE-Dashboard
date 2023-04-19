@@ -1,5 +1,5 @@
 path {
-  stroke: #7D7C7C82; 
+  stroke: #ffffff82; 
   stroke-width: 0.5px; 
   fill: rgba(230, 230, 230, 1);
 }  
@@ -9,7 +9,7 @@ svg {
   display:flex; 
   align-items:center; 
   justify-content:center;
-  overflow:visible;
+  overflow:hidden;
 }
 
 .tooltip-area {
