@@ -50,3 +50,16 @@ svg {
   text-align: center;
   color: #ff0000 !important;
 }
+
+.logo {
+  width:100%;
+}
+
+#my_dataviz {
+  width: 600px;
+  height: 400px;
+}
+
+#svg23 {
+  display: none;
+}
