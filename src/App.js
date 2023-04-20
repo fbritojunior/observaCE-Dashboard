@@ -7,42 +7,66 @@ import './css/App.css'
 //})
 
 let data_ = require('./data/ce-municipalities_topo.json');
+//var data2_ = null;
 
 class App extends Component {
 
-  constructor(props) {
-    super(props);
+  //componentDidUpdate() {
 
-    this.state = {
-        totalValue: null,
-        errorMessage: null
-    };
-  }
+    //this.setState({ totalValue: 0 }, () => {
+    //  console.log(this.state.totalValue, 'teste');
+    //}); 
 
-  componentDidMount() {
-    const urlApi = 'https://servicodados.ibge.gov.br/api/v3/agregados/1301/periodos/2010/variaveis/615|616?localidades=N3[23]|N6[N3[23]]'
-    fetch(urlApi)
-        .then(async response => {
-          const data2 = await response.json();
+    //const urlApi = 'https://servicodados.ibge.gov.br/api/v3/agregados/1301/periodos/2010/variaveis/615|616?localidades=N3[23]|N6[N3[23]]'
+    //fetch(urlApi);
+    
+        //.then(async response => {
+        //  const data2 = await response.json();
 
-          if (!response.ok) {
-            const error = (data2 && data2.message) || response.statusText;
-            return Promise.reject(error);
-          }
+        //  if (!response.ok) {
+        //    const error = (data2 && data2.message) || response.statusText;
+        //    return Promise.reject(error);
+        //  }
 
-          this.setState({ totalValue: data2[1].variavel })
+        //  this.setState({ totalValue: data2[1].variavel })
         
-        })
-        .catch(error => {
-          this.setState({ errorMessage: error.toString() });
-          console.error('There was an error!', error);
-        });
+       // })
+       // .catch(error => {
+        //  this.setState({ errorMessage: error.toString() });
+        //  console.error('There was an error!', error);
+        //});
+
+        //.then((response) => response.json())
+        //.then((json) =>  
+        //  this.setState({ totalValue: json[1].variavel  })
+        //);
+
+        //.then(res => res.json())
+        //.then(
+         // (result) => {
+          //  this.setState({
+              //isLoaded: true,
+          //    totalValue: result[1].variavel
+          //  })
+          //},
+          //(error) => {
+          //  this.setState({
+              //isLoaded: true,
+          //    error   
+          //  });
+          //}
+       // )
+
+
         //.then(datax => this.setState({totalValue: datax}))
-  }
+  //}
 
   render() {
+    //const { totalValue } = this.state;
+    //debugger;
+    //console.log(this.state.totalValue, 'teste2');
     return ( 
-      <Dashboard data = {data_} data2 = {this.state.totalValue} /> 
+      <Dashboard data = {data_} /> 
     );
   }
 }
