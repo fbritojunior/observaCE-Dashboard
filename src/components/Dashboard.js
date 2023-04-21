@@ -13,14 +13,17 @@ class Dashboard extends Component {
 
 	constructor(props) {
 		super(props);
-		//this.textInput = React.createRef();
+
 		this.svgRef = createRef();
 		this.svgRef2 = createRef();
 
 		this.state = {
-			researchVar: null,
-			researchYear: null,
-			dataCounties: null
+			researchVarArea: null,
+			researchYearArea: null,
+			dataCountiesArea: null,
+			researchVarDensity: null,
+			researchYearDensity: null,
+			dataCountiesDensity: null
 		};
 	}
 
@@ -30,138 +33,36 @@ class Dashboard extends Component {
 		fetch(urlApi)
 			.then((response) => response.json())
 			.then((json) => {
-				var dataValuesIbge = json[0].resultados[0].series;
-				const researchYear = Object.keys(dataValuesIbge[0].serie);
-				let dataValues = [], dataName = [], groupData = [];
+				var dataValuesIbgeArea = json[0].resultados[0].series;
+				const researchYearArea = Object.keys(dataValuesIbgeArea[0].serie);
+				let dataValuesArea = [], dataNameArea = [], groupDataArea = [];
 
-				for (let i = 1; i < dataValuesIbge.length; i++) {
-					dataName = (dataValuesIbge[i].localidade.nome.split('-')[0].trim());
-					dataValues = (parseFloat(dataValuesIbge[i].serie[researchYear]));
-					groupData.push({ name: dataName, value: dataValues });
+				for (let i = 1; i < dataValuesIbgeArea.length; i++) {
+					dataNameArea = (dataValuesIbgeArea[i].localidade.nome.split('-')[0].trim());
+					dataValuesArea = (parseFloat(dataValuesIbgeArea[i].serie[researchYearArea]));
+					groupDataArea.push({ name: dataNameArea, value: dataValuesArea });
 				}
-				this.setState({ dataCounties: groupData, researchVar: json[0].variavel }, () => this.drawDash())
+				this.setState({ dataCountiesArea: groupDataArea, researchVarArea: json[0].variavel }, () => this.drawDash())
+
+				var dataValuesIbgeDensity = json[1].resultados[0].series;
+				const researchYearDensity = Object.keys(dataValuesIbgeDensity[1].serie);
+				let dataValuesDensity = [], dataNameDensity = [], groupDataDensity = [];
+
+				for (let i = 1; i < dataValuesIbgeDensity.length; i++) {
+					dataNameDensity = (dataValuesIbgeDensity[i].localidade.nome.split('-')[0].trim());
+					dataValuesDensity = (parseFloat(dataValuesIbgeDensity[i].serie[researchYearDensity]));
+					groupDataDensity.push({ name: dataNameDensity, value: dataValuesDensity });
+				}
+				this.setState({ dataCountiesDensity: groupDataDensity, researchVarDensity: json[1].variavel }, () => this.drawDash())
 			}
 				//this.setState({ dataCounties: json[0].resultados[0].series, researchVar: json[0].variavel }, () => this.drawDash())
 			);
 	}
 
-	drawChart() {
-
-		let features = ["Área", "Densidade", "C"];
-
-		//generate the data
-		let data = [];
-		for (var i = 0; i < 3; i++){
-    		var point = {}
-    		//each feature will be a random number from 1-9
-    		features.forEach(f => point[f] = 1 + Math.random() * 8);
-    		data.push(point);
-		}
-
-		let width = 200, height = 200;
-		
-		let svg = d3.select("#svg2").append("svg")
-    		.attr("width", width)
-    		.attr("height", height);
-
-		let radialScale = d3.scaleLinear()
-    	.domain([0, 10])
-    	.range([0, 100]);
-
-		let ticks = [2, 4, 6, 8, 10];
-
-		svg.selectAll("circle")
-    	.data(ticks)
-    	.join(
-        enter => enter.append("circle")
-            .attr("cx", width / 2)
-            .attr("cy", height / 2)
-            .attr("fill", "none")
-            .attr("stroke", "lightgray")
-            .attr("r", d => radialScale(d))
-    	);
-
-		svg.selectAll(".ticklabel")
-    	.data(ticks)
-    	.join(
-        enter => enter.append("text")
-            .attr("class", "ticklabel")
-            .attr("x", width / 2 + 5)
-            .attr("y", d => height / 2 - radialScale(d))
-            .text(d => d.toString())
-    	);
-
-		function angleToCoordinate(angle, value){
-			let x = Math.cos(angle) * radialScale(value);
-			let y = Math.sin(angle) * radialScale(value);
-			return {"x": width / 2 + x, "y": height / 2 - y};
-		}
-
-		let featureData = features.map((f, i) => {
-			let angle = (Math.PI / 2) + (2 * Math.PI * i / features.length);
-			return {
-			"name": f,
-			"angle": angle,
-			"line_coord": angleToCoordinate(angle, 10),
-			"label_coord": angleToCoordinate(angle, 10.5)
-			};
-		});
-
-		// draw axis line
-		svg.selectAll("line")
-		.data(featureData)
-		.join(
-		enter => enter.append("line")
-		.attr("x1", width / 2)
-		.attr("y1", height / 2)
-		.attr("x2", d => d.line_coord.x)
-		.attr("y2", d => d.line_coord.y)
-		.attr("stroke","black")
-		);
-
-		// draw axis label
-		svg.selectAll(".axislabel")
-		.data(featureData)
-		.join(
-		enter => enter.append("text")
-		.attr("x", d => d.label_coord.x)
-		.attr("y", d => d.label_coord.y)
-		.text(d => d.name)
-		);
-
-		let line = d3.line()
-    .x(d => d.x)
-    .y(d => d.y);
-let colors = ["darkorange", "gray", "navy"];
-
-function getPathCoordinates(data_point){
-    let coordinates = [];
-    for (var i = 0; i < features.length; i++){
-        let ft_name = features[i];
-        let angle = (Math.PI / 2) + (2 * Math.PI * i / features.length);
-        coordinates.push(angleToCoordinate(angle, data_point[ft_name]));
-    }
-    return coordinates;
-}
-
-svg.selectAll("path")
-    .data(data)
-    .join(
-        enter => enter.append("path")
-            .datum(d => getPathCoordinates(d))
-            .attr("d", line)
-            .attr("stroke-width", 3)
-            .attr("stroke", (_, i) => colors[i])
-            .attr("fill", (_, i) => colors[i])
-            .attr("stroke-opacity", 1)
-            .attr("opacity", 0.5)
-    );
-	}
-
 	drawBars() {
 
-		var data = this.state.dataCounties;
-		d3.select('#title-bar').html(this.state.researchVar);
+		var data = this.state.dataCountiesDensity;
+		//d3.select('#title-bar').html(this.state.researchVarArea);
 		data = data.sort(function (a, b) {
 			return d3.descending(a.value, b.value);
 		})
@@ -173,7 +74,7 @@ svg.selectAll("path")
 
 		var y = d3.scaleBand()
 			.range([0, height])
-			.padding(0.1);
+			.padding(0.25);
 
 		var x = d3.scaleLinear()
 			.range([0, width]);
@@ -223,7 +124,7 @@ svg.selectAll("path")
 
 		var mousemove = function (event, d) {
 			Tooltip
-				.html("Valor: " + d.value)
+				.html("Densidade: " + d.value + " hab/km<sup>2</sup>.")
 				.style("left", (event.pageX + 20) + "px")
 				.style("top", (event.pageY - 10) + "px");
 		}
@@ -257,12 +158,12 @@ svg.selectAll("path")
 			.call(d3.axisLeft(y));
 
 		svg.append("text")
-			.attr("x", (width / 2))             
+			.attr("x", (width / 2))
 			.attr("y", 0 - (margin.top / 2))
-			.attr("text-anchor", "middle")  
-			.style("font-size", "16px") 
+			.attr("text-anchor", "middle")
+			.style("font-size", "16px")
 			//.style("text-decoration", "underline")  
-			.text(this.state.researchVar);
+			.text(this.state.researchVarDensity);
 	}
 
 	drawMap() {
@@ -314,7 +215,7 @@ svg.selectAll("path")
 
 			const propName = d.properties.name.toLocaleLowerCase();
 			//const filteredItem = groupData.filter(e => e.name.toLocaleLowerCase() === propName);
-			const filteredItem = this.state.dataCounties.filter(e => e.name.toLocaleLowerCase() === propName);
+			const filteredItem = this.state.dataCountiesArea.filter(e => e.name.toLocaleLowerCase() === propName);
 			//cons t values = Object.values(filteredItem[0])
 			//console.log(filteredItem);
 
@@ -329,13 +230,168 @@ svg.selectAll("path")
 				.style("top", (event.pageY) + "px");
 		};
 
-		var color = d3.scaleLinear()
-			.domain([1, 200])
-			.range(["lightblue", "steelblue"]);
+		var objArrArea = Object.values(this.state.dataCountiesArea).map(e => e.value);
+		var objArrDensity = Object.values(this.state.dataCountiesDensity).map(e => e.value);
+		const maxArea = Math.max(...objArrArea),
+			minArea = Math.min(...objArrArea);
+		console.log(minArea, maxArea)
+		const maxDensity = Math.max(...objArrDensity),
+			minDensity = Math.min(...objArrDensity);
+		console.log(minDensity, maxDensity)
+		
+		//var color = d3.scaleLinear()
+		//	.domain([0, 200])
+		//	.range(["lightblue", "steelblue"]);
 
-		var myColor = d3.scaleSequential()
+		var color = d3.scaleLog()
+		.domain([minDensity, maxDensity])
+		.range(["lightblue", "steelblue"]);
+
+		//var color = d3.scaleLinear()
+		//.domain([minArea, maxArea])
+		//.range(["lightblue", "steelblue"]);
+
+		//console.log(Object.values(this.state.dataCounties));
+		/*var myColor = d3.scaleSequential()
 			.interpolator(d3.interpolateInferno)
-			.domain([1, 100])
+			.domain([1, 200])*/
+		
+		const coloring = (d, i) => { 
+			const propName = d.properties.name.toLowerCase();
+			const obj = Object.values(this.state.dataCountiesDensity).filter(e => e.name.toLowerCase() === propName)[0].value;
+			return color(obj);
+		}
+
+		const drawChart = (event, d) => {
+
+			let features = ["Área", "Densidade", "Valor"];
+
+			const propName = d.properties.name.toLowerCase();
+			var objArrArea = Object.values(this.state.dataCountiesArea).map(e => e.value);
+			var objArrDensity = Object.values(this.state.dataCountiesArea).map(e => e.value);
+			const objArea = Object.values(this.state.dataCountiesArea).filter(e => e.name.toLowerCase() === propName)[0].value;
+			const objDensity = Object.values(this.state.dataCountiesDensity).filter(e => e.name.toLowerCase() === propName)[0].value;
+
+			let data = [{ 'Área': objArea, 'Densidade': objDensity, 'Valor': 10 + Math.random() * 1000 }]
+
+			//generate the data
+			//let data = [];
+			//for (var i = 0; i < 1; i++){
+			//var point = {}
+			//each feature will be a random number from 1-9
+			//features.forEach(f => point[f] = 1 + Math.random() * 8);
+			//data.push(point);
+			//}
+
+			let width = 200, height = 200;
+
+			d3.selectAll("#svg2 > *").remove();
+			let svg = d3.select("#svg2").append("svg")
+				.attr("width", width)
+				.attr("height", height);
+
+			//let radialScale = d3.scaleLinear()
+			//.domain([0, 10])
+			//.range([0, 100]);
+
+			let radialScale = d3.scaleLinear()
+				.domain([0, 1000])
+				.range([0, 100]);
+
+			//let ticks = [2, 4, 6, 8, 10];
+			let ticks = [330, 660, 1000];
+			let ticksArea = [1333, 2666, 4000];
+			let ticksDensity = [2666, 5333, 8000];
+			let ticksThree = [1000, 2000, 3000];
+
+			svg.selectAll("circle")
+				.data(ticks)
+				.join(
+					enter => enter.append("circle")
+						.attr("cx", width / 2)
+						.attr("cy", height / 2)
+						.attr("fill", "none")
+						.attr("stroke", "lightgray")
+						.attr("r", d => radialScale(d))
+				);
+
+			svg.selectAll(".ticklabel")
+				.data(ticks)
+				.join(
+					enter => enter.append("text")
+						.attr("class", "ticklabel")
+						.attr("x", width / 2 + 5)
+						.attr("y", d => height / 2 - radialScale(d))
+						.text(d => d.toString())
+				);
+
+			function angleToCoordinate(angle, value) {
+				let x = Math.cos(angle) * radialScale(value);
+				let y = Math.sin(angle) * radialScale(value);
+				return { "x": width / 2 + x, "y": height / 2 - y };
+			}
+
+			let featureData = features.map((f, i) => {
+				let angle = (Math.PI / 2) + (2 * Math.PI * i / features.length);
+				return {
+					"name": f,
+					"angle": angle,
+					"line_coord": angleToCoordinate(angle, 1000),
+					"label_coord": angleToCoordinate(angle, 1250)
+				};
+			});
+
+			// draw axis line
+			svg.selectAll("line")
+				.data(featureData)
+				.join(
+					enter => enter.append("line")
+						.attr("x1", width / 2)
+						.attr("y1", height / 2)
+						.attr("x2", d => d.line_coord.x)
+						.attr("y2", d => d.line_coord.y)
+						.attr("stroke", "gray")
+				);
+
+			// draw axis label
+			svg.selectAll(".axislabel")
+				.data(featureData)
+				.join(
+					enter => enter.append("text")
+						.attr("x", d => d.label_coord.x)
+						.attr("y", d => d.label_coord.y)
+						.text(d => d.name)
+				);
+
+			let line = d3.line()
+				.x(d => d.x)
+				.y(d => d.y);
+
+			let colors = ["darkorange", "gray", "navy"];
+
+			function getPathCoordinates(data_point) {
+				let coordinates = [];
+				for (var i = 0; i < features.length; i++) {
+					let ft_name = features[i];
+					let angle = (Math.PI / 2) + (2 * Math.PI * i / features.length);
+					coordinates.push(angleToCoordinate(angle, data_point[ft_name]));
+				}
+				return coordinates;
+			}
+
+			svg.selectAll("path")
+				.data(data)
+				.join(
+					enter => enter.append("path")
+						.datum(d => getPathCoordinates(d))
+						.attr("d", line)
+						.attr("stroke-width", 3)
+						.attr("stroke", (_, i) => colors[i])
+						.attr("fill", (_, i) => colors[i])
+						.attr("stroke-opacity", 1)
+						.attr("opacity", 0.5)
+				);
+		};
 
 		mapa.append("g").selectAll("path").data(features).enter().append("path")
 			.attr("name", function (d) {
@@ -346,7 +402,8 @@ svg.selectAll("path")
 			})
 			.attr("d", path)
 			//.attr('fill', '#e7d8ad')
-			.attr('fill', function (d, i) { return color(i); })
+			//.attr('fill', function (d, i) { return color(i); })
+			.attr('fill', coloring)
 			.on("mousemove", mouseMove)
 			.on('mouseover', mouseOver //function (d) {
 				//d3.select(this)
@@ -366,7 +423,9 @@ svg.selectAll("path")
 				//tooltip.style('opacity', 0);
 				Tooltip.style("opacity", 0);
 			})
-			.on("click", this.drawChart);
+			.on("click", drawChart);
+
+
 	}
 
 	drawDash() {
@@ -417,8 +476,8 @@ svg.selectAll("path")
 				</Layout>
 				<Footer>
 					<div style={{ marginTop: 0 }}>
-						<span style={{ marginBottom: 0 }}>Desenvolvido por <a href='https://github.com/fbrito'>@fbritojunior</a>. </span>
-						<span>Código fonte disponível em <a href='https://github.com/fbrito'>https://github.com/</a></span>
+						<span style={{ marginBottom: 0 }}>Desenvolvido por <a href='https://github.com/fbritojunior'>@fbritojunior</a>. </span>
+						<span>Código fonte disponível em <a href='https://github.com/fbritojunior/observaCE-Dashboard'>https://github.com/</a></span>
 					</div>
 				</Footer>
 			</Layout>
