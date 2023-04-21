@@ -3,13 +3,43 @@
   font-size: 30px;
   font-weight: 700;
   color: #ffffff;
+  background-color: rgb(0 75 150 / 75%);
+}
+
+.dash-sider {
+  background-color: rgb(0 50 100 / 90%) !important;
 }
 
 .dash-content {
   display:flex; 
+  flex-direction: row;
   align-items:center; 
   justify-content:center;
-  background-color: rgba(150, 140, 140, 25%);
+  background-color: rgba(200, 200, 200, 0.25);
+}
+
+.container-left {
+  display:flex; 
+  align-items:center; 
+  justify-content:center;
+  flex: 1;
+  padding: 1%;
+}
+
+.container-center {
+  display:flex; 
+  flex-direction: row;
+  align-items:center; 
+  justify-content:center;
+  flex: 1;padding: 1%;
+}
+
+.container-right {
+  display:flex; 
+  flex-direction: row;
+  align-items:center; 
+  justify-content:center;
+  flex: 1;padding-right: 5%;
 }
 
 path {
@@ -18,12 +48,12 @@ path {
   /*fill: rgba(230, 230, 230, 1);*/
 }  
 svg {
-  margin:0;
-  padding: 0;  
+  margin:1%;
+  padding: 1%;  
   display:flex; 
   align-items:center; 
   justify-content:center;
-  overflow:hidden;
+  overflow:visible;
 }
 
 .tooltip-area2 {
@@ -55,11 +85,18 @@ svg {
   width:100%;
 }
 
-#my_dataviz {
-  width: 600px;
+#bar-graph {
+  width: 400px;
   height: 400px;
 }
+#bar-graph g text{
+  font-size: 14px;
+  font-family: 'Roboto', sans-serif;
+  font-weight: 500;
+}
 
-#svg23 {
-  display: none;
+svg rect.foo {
+  fill: white;
+  stroke-width: 0.5;
+  stroke: grey;
 }

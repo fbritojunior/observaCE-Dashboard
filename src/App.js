@@ -7,7 +7,6 @@ import './css/App.css'
 //})
 
 let data_ = require('./data/ce-municipalities_topo.json');
-//var data2_ = null;
 
 class App extends Component {
 
@@ -63,8 +62,6 @@ class App extends Component {
 
   render() {
     //const { totalValue } = this.state;
-    //debugger;
-    //console.log(this.state.totalValue, 'teste2');
     return ( 
       <Dashboard data = {data_} /> 
     );
