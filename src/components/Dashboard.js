@@ -24,8 +24,18 @@ class Dashboard extends Component {
 			dataCountiesArea: null,
 			researchVarDensity: null,
 			researchYearDensity: null,
-			dataCountiesDensity: null
+			dataCountiesDensity: null,
+			maxArea: null,
+			minArea: null, 
+			maxDensity: null,
+			minDensity: null,
+			maxH: null,
+			minH: null,
+			selectedOption: 0
 		};
+
+		//this.handleChange.bind(this);
+		this.handleChange = this.handleChange.bind(this);
 	}
 
 	componentDidMount() {
@@ -43,8 +53,8 @@ class Dashboard extends Component {
 					dataValuesArea = (parseFloat(dataValuesIbgeArea[i].serie[researchYearArea]));
 					groupDataArea.push({ name: dataNameArea, value: dataValuesArea });
 				}
-				this.setState({ dataCountiesArea: groupDataArea, researchVarArea: json[0].variavel }, () => this.drawDash())
-
+				//this.setState({ dataCountiesArea: groupDataArea, researchVarArea: json[0].variavel }, () => this.drawDash())
+//debugger;
 				var dataValuesIbgeDensity = json[1].resultados[0].series;
 				const researchYearDensity = Object.keys(dataValuesIbgeDensity[1].serie);
 				let dataValuesDensity = [], dataNameDensity = [], groupDataDensity = [];
@@ -54,7 +64,30 @@ class Dashboard extends Component {
 					dataValuesDensity = (parseFloat(dataValuesIbgeDensity[i].serie[researchYearDensity]));
 					groupDataDensity.push({ name: dataNameDensity, value: dataValuesDensity });
 				}
-				this.setState({ dataCountiesDensity: groupDataDensity, researchVarDensity: json[1].variavel }, () => this.drawDash())
+
+				let objArrArea = Object.values(groupDataArea).map(e => e.value);
+				let objArrDensity = Object.values(groupDataDensity).map(e => e.value);
+				let objH = (objArrArea, objArrDensity).map((x, i) => objArrArea[i] * objArrDensity[i]);
+
+		const maxArea = Math.max(...objArrArea),
+			minArea = Math.min(...objArrArea);
+		const maxDensity = Math.max(...objArrDensity),
+			minDensity = Math.min(...objArrDensity);
+		const maxH = Math.max(...objH),
+			minH = Math.min(...objH);
+
+				this.setState({ 
+					dataCountiesArea: groupDataArea, 
+					researchVarArea: json[0].variavel, 
+					dataCountiesDensity: groupDataDensity, 
+					researchVarDensity: json[1].variavel,
+					maxArea: maxArea,
+					minArea: minArea, 
+					maxDensity: maxDensity,
+					minDensity: minDensity,
+					maxH: maxH,
+					minH: minH
+				}, () => this.drawDash())
 			}
 				//this.setState({ dataCounties: json[0].resultados[0].series, researchVar: json[0].variavel }, () => this.drawDash())
 			);
@@ -178,7 +211,7 @@ class Dashboard extends Component {
 
 		var mapa = svg.append("g");//.attr("class", "mapa").attr("id", "mapaid");
 
-		var projection = d3.geoMercator().scale(5800).rotate([0, 0]).center([-38, -4.50]);
+		var projection = d3.geoMercator().scale(5800).rotate([0, 0]).center([-37.3, -4.50]);
 
 		var path = d3.geoPath().projection(projection);
 
@@ -186,68 +219,23 @@ class Dashboard extends Component {
 
 		var features = topojson.feature(values, values.objects.municipalities).features;
 
-		//var tooltip = d3.select('.tooltip-area').style('opacity', 0);
-
-		var Tooltip = d3.select("#tooltipId")
-			.append("div")
-			.style("opacity", 0)
-			.attr("class", "tooltip")
-			.style("background-color", "white")
-			.style("border", "solid")
-			.style("border-width", "2px")
-			.style("border-radius", "5px")
-			.style("padding", "5px")
-
-		function mouseOver(event, d) {
-
-			const currentPath = d3.select(this);
-			var currentColor = currentPath.style('fill');
-
-			currentPath//.transition()
-				.style("stroke", "white").style("stroke-width", 2).style("opacity", 0.25)
-				//.style('fill', 'white')
-				.style("cursor", "pointer");
-
-			//tooltip.style("opacity", 1);
-			Tooltip.style("opacity", 1);
-		};
-
-		const mouseMove = (event, d) => {
-
-			const propName = d.properties.name.toLocaleLowerCase();
-			//const filteredItem = groupData.filter(e => e.name.toLocaleLowerCase() === propName);
-			const filteredItem = this.state.dataCountiesArea.filter(e => e.name.toLocaleLowerCase() === propName);
-			//cons t values = Object.values(filteredItem[0])
-			//console.log(filteredItem);
-
-			//const text = d3.select('.tooltip-area__text');
-			//text.text(`${d.properties.name.toString().toLowerCase()} ${ba[0].val} `);	
-			//const [x, y] = d3.pointer(event);
-			//tooltip.attr('transform', `translate(${x}, ${y})`);
-
-			Tooltip
-				.html(`${propName.split(' ').map(str => str.replace(/^./, s => s.toUpperCase())).join(' ').replace(/\sD[aeiou]\s/g, ss => ss.toLocaleLowerCase())} `)
-				.style("left", (event.pageX + 20) + "px")
-				.style("top", (event.pageY) + "px");
-		};
-
-		let objArrArea = Object.values(this.state.dataCountiesArea).map(e => e.value);
+		/*let objArrArea = Object.values(this.state.dataCountiesArea).map(e => e.value);
 		let objArrDensity = Object.values(this.state.dataCountiesDensity).map(e => e.value);
 		let objH = (objArrArea, objArrDensity).map((x, i) => objArrArea[i] * objArrDensity[i]);
 
 		const maxArea = Math.max(...objArrArea),
 			minArea = Math.min(...objArrArea);
-		//console.log(minArea, maxArea)
 		const maxDensity = Math.max(...objArrDensity),
 			minDensity = Math.min(...objArrDensity);
-		//console.log(minDensity, maxDensity)
 		const maxH = Math.max(...objH),
-			minH = Math.min(...objH);
-		//console.log(minH, maxH, 'teste')
+			minH = Math.min(...objH);*/
 
 		//var color = d3.scaleLinear()
 		//	.domain([0, 200])
 		//	.range(["lightblue", "steelblue"]);
+
+		const minDensity = this.state.minDensity,
+			maxDensity = this.state.maxDensity;
 
 		var color = d3.scaleLog()
 			.domain([minDensity, maxDensity])
@@ -267,24 +255,30 @@ class Dashboard extends Component {
 			return color(obj);
 		}
 
-		const drawChart = (event, d) => {
+		const drawChart = (_, d) => {
 
 			let features = ["Área", "Densidade", "Hab"];
 
 			const propName = d.properties.name.toLowerCase();
-			var objArrArea = Object.values(this.state.dataCountiesArea).map(e => e.value);
-			var objArrDensity = Object.values(this.state.dataCountiesArea).map(e => e.value);
+			//var objArrArea = Object.values(this.state.dataCountiesArea).map(e => e.value);
+			//var objArrDensity = Object.values(this.state.dataCountiesArea).map(e => e.value);
 			const objArea = Object.values(this.state.dataCountiesArea).filter(e => e.name.toLowerCase() === propName)[0].value;
 			const objDensity = Object.values(this.state.dataCountiesDensity).filter(e => e.name.toLowerCase() === propName)[0].value;
 			const objH = objArea * objDensity;
 
-			//const normArea = objArea/maxArea*100;
+			const minDensity = this.state.minDensity,
+				maxDensity = this.state.maxDensity;
+			const minArea = this.state.minArea,
+				maxArea = this.state.maxArea;
+			const minH = this.state.minH,
+				maxH = this.state.maxH;
+
 			const normArea = (objArea - minArea) / (maxArea - minArea) * 100;
 			const normDensity = (objDensity - minDensity) / (maxDensity - minDensity) * 100;
 			const normH = (objH - minH) / (maxH - minH) * 100;
 
 			let data = [{ 'Área': normArea, 'Densidade': normDensity, 'Hab': normH }]
-			//console.log(objH);
+			
 			//generate the data
 			//let data = [];
 			//for (var i = 0; i < 1; i++){
@@ -309,12 +303,8 @@ class Dashboard extends Component {
 				.domain([0, 100])
 				.range([0, 100]);
 
-
 			//let ticks = [2, 4, 6, 8, 10];
 			let ticks = [33, 66, 100];
-			//let ticksArea = [1333, 2666, 4000];
-			//let ticksDensity = [2666, 5333, 8000];
-			//let ticksThree = [1000, 2000, 3000];
 
 			svg.selectAll("circle")
 				.data(ticks)
@@ -405,6 +395,51 @@ class Dashboard extends Component {
 				);
 		};
 
+		//var tooltip = d3.select('.tooltip-area').style('opacity', 0);
+
+		var Tooltip = d3.select("#tooltipId")
+			.append("div")
+			.style("opacity", 0)
+			.attr("class", "tooltip")
+			.style("background-color", "white")
+			.style("border", "solid")
+			.style("border-width", "2px")
+			.style("border-radius", "5px")
+			.style("padding", "5px")
+
+		function mouseOver(event, d) {
+
+			const currentPath = d3.select(this);
+			var currentColor = currentPath.style('fill');
+
+			currentPath//.transition()
+				.style("stroke", "white").style("stroke-width", 2).style("opacity", 0.25)
+				//.style('fill', 'white')
+				.style("cursor", "pointer");
+
+			//tooltip.style("opacity", 1);
+			Tooltip.style("opacity", 1);
+		};
+
+		const mouseMove = (event, d) => {
+
+			const propName = d.properties.name.toLocaleLowerCase();
+			//const filteredItem = groupData.filter(e => e.name.toLocaleLowerCase() === propName);
+			const filteredItem = this.state.dataCountiesArea.filter(e => e.name.toLocaleLowerCase() === propName);
+			//cons t values = Object.values(filteredItem[0])
+			
+
+			//const text = d3.select('.tooltip-area__text');
+			//text.text(`${d.properties.name.toString().toLowerCase()} ${ba[0].val} `);	
+			//const [x, y] = d3.pointer(event);
+			//tooltip.attr('transform', `translate(${x}, ${y})`);
+
+			Tooltip
+				.html(`${propName.split(' ').map(str => str.replace(/^./, s => s.toUpperCase())).join(' ').replace(/\sD[aeiou]\s/g, ss => ss.toLocaleLowerCase())} `)
+				.style("left", (event.pageX + 20) + "px")
+				.style("top", (event.pageY) + "px");
+		};
+
 		mapa.append("g").selectAll("path").data(features).enter().append("path")
 			.attr("name", function (d) {
 				return d.properties.name;
@@ -436,8 +471,6 @@ class Dashboard extends Component {
 				Tooltip.style("opacity", 0);
 			})
 			.on("click", drawChart);
-
-
 	}
 
 	drawDash() {
@@ -455,6 +488,14 @@ class Dashboard extends Component {
 		this.drawMap();
 		this.drawBars();
 	}
+	
+	handleChange (selectedOption) {
+		console.log(selectedOption);
+		this.setState({ selectedOption: selectedOption.value});
+		//setSelectedOption(selectedOption.value);
+		//this.drawMap().drawChart(selectedOption);
+		//debugger;
+	}
 
 	render() {
 		//return (
@@ -464,24 +505,37 @@ class Dashboard extends Component {
 		//	</g>
 		//</svg>
 		//)
-		const {dataCountiesArea} = this.state;
+		//const {dataCountiesArea} = this.state;
+		
 		//debugger;
+
+		const options = 
+			Object.values(this.props.data.objects.municipalities.geometries.map((item) => ({
+					value: item.properties.name,
+					label: item.properties.name.toLowerCase().replace(/^.|\s[a-z]/gi, s => s.toUpperCase()).replace(/\sD[a-z]\s/gi, s => s.toLowerCase())
+				})));
+		//Object.values(this.props.data.objects.municipalities.geometries.map(e => e.properties));
+		/*[
+			{ value: 'chocolate', label: 'Chocolate' },
+			{ value: 'strawberry', label: 'Strawberry' },
+			{ value: 'vanilla', label: 'Vanilla' }
+		  ]*/
 		return (
 			<Layout style={{ height: 'auto' }}>
 				<Header className="dash-header" > Painel para Visualização de Dados no Ceará</Header>
 				<Layout>
-					<Sider className="dash-sider ">
+					<Sider className="dash-sider" >
 						<Logo className='logo' />
 						<div className='siderTitle'>React + D3.Js</div>
-						<Select options={dataCountiesArea} />
+						<Select options={options} onChange={this.handleChange} style={{}} />
 					</Sider>
 					<Content className="dash-content" >
 						<div className='container-left'>
-							<svg ref={this.svgRef} ></svg>
+							<svg ref={this.svgRef} />
 							<div id="tooltipId" />
 						</div>
 						<div className='container-center'>
-							<svg ref={this.svgRef2} className='' id='svg2'></svg>
+							<svg ref={this.svgRef2} className='' id='svg2' />
 						</div>
 						<div className='container-right'>
 							{/*<span id='title-bar'>untitled</span>*/}
