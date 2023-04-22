@@ -5,7 +5,8 @@ import * as topojson from "topojson";
 //import { Breadcrumb, Layout, Menu, theme } from 'antd';
 import { Layout } from 'antd';
 import "../css/main.css";
-import { ReactComponent as Logo } from '../images/logo.svg'
+import { ReactComponent as Logo } from '../images/logo.svg';
+import Select from 'react-select'
 
 const { Header, Content, Footer, Sider } = Layout;
 
@@ -230,33 +231,37 @@ class Dashboard extends Component {
 				.style("top", (event.pageY) + "px");
 		};
 
-		var objArrArea = Object.values(this.state.dataCountiesArea).map(e => e.value);
-		var objArrDensity = Object.values(this.state.dataCountiesDensity).map(e => e.value);
+		let objArrArea = Object.values(this.state.dataCountiesArea).map(e => e.value);
+		let objArrDensity = Object.values(this.state.dataCountiesDensity).map(e => e.value);
+		let objH = (objArrArea, objArrDensity).map((x, i) => objArrArea[i] * objArrDensity[i]);
+
 		const maxArea = Math.max(...objArrArea),
 			minArea = Math.min(...objArrArea);
-		console.log(minArea, maxArea)
+		//console.log(minArea, maxArea)
 		const maxDensity = Math.max(...objArrDensity),
 			minDensity = Math.min(...objArrDensity);
-		console.log(minDensity, maxDensity)
-		
+		//console.log(minDensity, maxDensity)
+		const maxH = Math.max(...objH),
+			minH = Math.min(...objH);
+		//console.log(minH, maxH, 'teste')
+
 		//var color = d3.scaleLinear()
 		//	.domain([0, 200])
 		//	.range(["lightblue", "steelblue"]);
 
 		var color = d3.scaleLog()
-		.domain([minDensity, maxDensity])
-		.range(["lightblue", "steelblue"]);
+			.domain([minDensity, maxDensity])
+			.range(["lightblue", "steelblue"]);
 
 		//var color = d3.scaleLinear()
 		//.domain([minArea, maxArea])
 		//.range(["lightblue", "steelblue"]);
 
-		//console.log(Object.values(this.state.dataCounties));
-		/*var myColor = d3.scaleSequential()
-			.interpolator(d3.interpolateInferno)
-			.domain([1, 200])*/
-		
-		const coloring = (d, i) => { 
+		//var color = d3.scaleSequential()
+		//	.interpolator(d3.interpolateCool)
+		//	.domain([minDensity, maxDensity]);
+
+		const coloring = (d, i) => {
 			const propName = d.properties.name.toLowerCase();
 			const obj = Object.values(this.state.dataCountiesDensity).filter(e => e.name.toLowerCase() === propName)[0].value;
 			return color(obj);
@@ -264,16 +269,22 @@ class Dashboard extends Component {
 
 		const drawChart = (event, d) => {
 
-			let features = ["Área", "Densidade", "Valor"];
+			let features = ["Área", "Densidade", "Hab"];
 
 			const propName = d.properties.name.toLowerCase();
 			var objArrArea = Object.values(this.state.dataCountiesArea).map(e => e.value);
 			var objArrDensity = Object.values(this.state.dataCountiesArea).map(e => e.value);
 			const objArea = Object.values(this.state.dataCountiesArea).filter(e => e.name.toLowerCase() === propName)[0].value;
 			const objDensity = Object.values(this.state.dataCountiesDensity).filter(e => e.name.toLowerCase() === propName)[0].value;
+			const objH = objArea * objDensity;
 
-			let data = [{ 'Área': objArea, 'Densidade': objDensity, 'Valor': 10 + Math.random() * 1000 }]
+			//const normArea = objArea/maxArea*100;
+			const normArea = (objArea - minArea) / (maxArea - minArea) * 100;
+			const normDensity = (objDensity - minDensity) / (maxDensity - minDensity) * 100;
+			const normH = (objH - minH) / (maxH - minH) * 100;
 
+			let data = [{ 'Área': normArea, 'Densidade': normDensity, 'Hab': normH }]
+			//console.log(objH);
 			//generate the data
 			//let data = [];
 			//for (var i = 0; i < 1; i++){
@@ -295,14 +306,15 @@ class Dashboard extends Component {
 			//.range([0, 100]);
 
 			let radialScale = d3.scaleLinear()
-				.domain([0, 1000])
+				.domain([0, 100])
 				.range([0, 100]);
 
+
 			//let ticks = [2, 4, 6, 8, 10];
-			let ticks = [330, 660, 1000];
-			let ticksArea = [1333, 2666, 4000];
-			let ticksDensity = [2666, 5333, 8000];
-			let ticksThree = [1000, 2000, 3000];
+			let ticks = [33, 66, 100];
+			//let ticksArea = [1333, 2666, 4000];
+			//let ticksDensity = [2666, 5333, 8000];
+			//let ticksThree = [1000, 2000, 3000];
 
 			svg.selectAll("circle")
 				.data(ticks)
@@ -336,8 +348,8 @@ class Dashboard extends Component {
 				return {
 					"name": f,
 					"angle": angle,
-					"line_coord": angleToCoordinate(angle, 1000),
-					"label_coord": angleToCoordinate(angle, 1250)
+					"line_coord": angleToCoordinate(angle, 100),
+					"label_coord": angleToCoordinate(angle, 120)
 				};
 			});
 
@@ -385,7 +397,7 @@ class Dashboard extends Component {
 					enter => enter.append("path")
 						.datum(d => getPathCoordinates(d))
 						.attr("d", line)
-						.attr("stroke-width", 3)
+						.attr("stroke-width", '1px')
 						.attr("stroke", (_, i) => colors[i])
 						.attr("fill", (_, i) => colors[i])
 						.attr("stroke-opacity", 1)
@@ -452,12 +464,16 @@ class Dashboard extends Component {
 		//	</g>
 		//</svg>
 		//)
+		const {dataCountiesArea} = this.state;
+		//debugger;
 		return (
 			<Layout style={{ height: 'auto' }}>
 				<Header className="dash-header" > Painel para Visualização de Dados no Ceará</Header>
 				<Layout>
 					<Sider className="dash-sider ">
 						<Logo className='logo' />
+						<div className='siderTitle'>React + D3.Js</div>
+						<Select options={dataCountiesArea} />
 					</Sider>
 					<Content className="dash-content" >
 						<div className='container-left'>
