@@ -55,7 +55,7 @@ class Dashboard extends Component {
 					groupDataArea.push({ name: dataNameArea, value: dataValuesArea });
 				}
 				//this.setState({ dataCountiesArea: groupDataArea, researchVarArea: json[0].variavel }, () => this.drawDash())
-				//debugger;
+
 				var dataValuesIbgeDensity = json[1].resultados[0].series;
 				const researchYearDensity = Object.keys(dataValuesIbgeDensity[1].serie);
 				let dataValuesDensity = [], dataNameDensity = [], groupDataDensity = [];
@@ -89,9 +89,7 @@ class Dashboard extends Component {
 					maxH: maxH,
 					minH: minH
 				}, () => this.drawDash())
-			}
-				//this.setState({ dataCounties: json[0].resultados[0].series, researchVar: json[0].variavel }, () => this.drawDash())
-			);
+			});
 	}
 
 	drawBars() {
@@ -126,11 +124,6 @@ class Dashboard extends Component {
 			.attr("height", height + 0)
 			.attr("width", width + margin.right)
 			.attr("class", "foo");
-
-		// format the data
-		//data.forEach(function(d) {
-		//d.value = +d.value;
-		//});
 
 		var color = d3.scaleLinear()
 			.domain([1, 10])
@@ -176,7 +169,6 @@ class Dashboard extends Component {
 			.data(data)
 			.enter().append("rect")
 			.attr("class", "bar")
-			//.attr("x", function(d) { return x(d.sales); })
 			.attr("width", function (d) { return x(d.value); })
 			.attr("y", function (d) { return y(d.name); })
 			.attr("height", y.bandwidth())
@@ -201,12 +193,12 @@ class Dashboard extends Component {
 			.text(this.state.researchVarDensity);
 	}
 
-	drawChart(_ev, d) {
+	drawChart(event, d) {
 
 		let features = ["Área", "Densidade", "Hab"];
-
-		if (_ev) { var propName = d.properties.name.toLowerCase() }
-		else { var propName = this.state.selectedOptionSt.toLowerCase() }
+		let propName = [];
+		if (event) { propName = d.properties.name.toLowerCase() }
+		else { propName = this.state.selectedOptionSt.toLowerCase() }
 
 		//var objArrArea = Object.values(this.state.dataCountiesArea).map(e => e.value);
 		//var objArrDensity = Object.values(this.state.dataCountiesArea).map(e => e.value);
@@ -227,15 +219,6 @@ class Dashboard extends Component {
 
 		let data = [{ 'Área': normArea, 'Densidade': normDensity, 'Hab': normH }]
 
-		//generate the data
-		//let data = [];
-		//for (var i = 0; i < 1; i++){
-		//var point = {}
-		//each feature will be a random number from 1-9
-		//features.forEach(f => point[f] = 1 + Math.random() * 8);
-		//data.push(point);
-		//}
-
 		let width = 200, height = 200;
 
 		d3.selectAll("#svg2 > *").remove();
@@ -243,15 +226,10 @@ class Dashboard extends Component {
 			.attr("width", width)
 			.attr("height", height);
 
-		//let radialScale = d3.scaleLinear()
-		//.domain([0, 10])
-		//.range([0, 100]);
-
 		let radialScale = d3.scaleLinear()
 			.domain([0, 100])
 			.range([0, 100]);
 
-		//let ticks = [2, 4, 6, 8, 10];
 		let ticks = [33, 66, 100];
 
 		svg.selectAll("circle")
@@ -291,7 +269,6 @@ class Dashboard extends Component {
 			};
 		});
 
-		// draw axis line
 		svg.selectAll("line")
 			.data(featureData)
 			.join(
@@ -303,7 +280,6 @@ class Dashboard extends Component {
 					.attr("stroke", "gray")
 			);
 
-		// draw axis label
 		svg.selectAll(".axislabel")
 			.data(featureData)
 			.join(
@@ -362,21 +338,6 @@ class Dashboard extends Component {
 
 		var features = topojson.feature(values, values.objects.municipalities).features;
 
-		/*let objArrArea = Object.values(this.state.dataCountiesArea).map(e => e.value);
-		let objArrDensity = Object.values(this.state.dataCountiesDensity).map(e => e.value);
-		let objH = (objArrArea, objArrDensity).map((x, i) => objArrArea[i] * objArrDensity[i]);
-
-		const maxArea = Math.max(...objArrArea),
-			minArea = Math.min(...objArrArea);
-		const maxDensity = Math.max(...objArrDensity),
-			minDensity = Math.min(...objArrDensity);
-		const maxH = Math.max(...objH),
-			minH = Math.min(...objH);*/
-
-		//var color = d3.scaleLinear()
-		//	.domain([0, 200])
-		//	.range(["lightblue", "steelblue"]);
-
 		const minDensity = this.state.minDensity,
 			maxDensity = this.state.maxDensity;
 
@@ -384,23 +345,11 @@ class Dashboard extends Component {
 			.domain([minDensity, maxDensity])
 			.range(["lightblue", "steelblue"]);
 
-		//var color = d3.scaleLinear()
-		//.domain([minArea, maxArea])
-		//.range(["lightblue", "steelblue"]);
-
-		//var color = d3.scaleSequential()
-		//	.interpolator(d3.interpolateCool)
-		//	.domain([minDensity, maxDensity]);
-
 		const coloring = (d, i) => {
 			const propName = d.properties.name.toLowerCase();
 			const obj = Object.values(this.state.dataCountiesDensity).filter(e => e.name.toLowerCase() === propName)[0].value;
 			return color(obj);
 		}
-
-
-
-		//var tooltip = d3.select('.tooltip-area').style('opacity', 0);
 
 		var Tooltip = d3.select("#tooltipId")
 			.append("div")
@@ -422,22 +371,13 @@ class Dashboard extends Component {
 				//.style('fill', 'white')
 				.style("cursor", "pointer");
 
-			//tooltip.style("opacity", 1);
 			Tooltip.style("opacity", 1);
 		};
 
 		const mouseMove = (event, d) => {
 
 			const propName = d.properties.name.toLocaleLowerCase();
-			//const filteredItem = groupData.filter(e => e.name.toLocaleLowerCase() === propName);
 			const filteredItem = this.state.dataCountiesArea.filter(e => e.name.toLocaleLowerCase() === propName);
-			//cons t values = Object.values(filteredItem[0])
-
-
-			//const text = d3.select('.tooltip-area__text');
-			//text.text(`${d.properties.name.toString().toLowerCase()} ${ba[0].val} `);	
-			//const [x, y] = d3.pointer(event);
-			//tooltip.attr('transform', `translate(${x}, ${y})`);
 
 			Tooltip
 				.html(`${propName.split(' ').map(str => str.replace(/^./, s => s.toUpperCase())).join(' ').replace(/\sD[aeiou]\s/g, ss => ss.toLocaleLowerCase())} `)
@@ -457,77 +397,36 @@ class Dashboard extends Component {
 			//.attr('fill', function (d, i) { return color(i); })
 			.attr('fill', coloring)
 			.on("mousemove", mouseMove)
-			.on('mouseover', mouseOver //function (d) {
-				//d3.select(this)
-				//.style("stroke", "gray").style("stroke-width", 1).style("opacity", 0.5)
-				//.style("cursor", "pointer"); 
-
-				//d3.select(".county")
-				//.text(d.properties.name.split(" ").map((w) => { return w[0].toUpperCase() + w.slice(1).toLowerCase() }).join(" ") );
-
-				//d3.select('.details').style('visibility', "visible");
-				//}
-			)
+			.on('mouseover', mouseOver)
 			.on('mouseout', function (d) {
 				d3.select(this)
 					.style("stroke", null).style("fill", null).style("stroke-width", 0.5).style('opacity', 1);
-				//d3.select('.details').style('visibility', "hidden");
-				//tooltip.style('opacity', 0);
 				Tooltip.style("opacity", 0);
 			})
 			.on("click", this.drawChart);
 	}
 
 	drawDash() {
-
-		/*var dataValuesIbge = this.state.dataCounties;
-		const researchYear = Object.keys(dataValuesIbge[0].serie);
-		let dataValues =[], dataName =[], groupData =[];
-
-		for(let i = 1; i<dataValuesIbge.length; i++) {
-			dataName = (dataValuesIbge[i].localidade.nome.split('-')[0].trim());
-			dataValues = (parseFloat(dataValuesIbge[i].serie[researchYear]));
-			groupData.push({ name: dataName, value: dataValues });
-		}*/
-
+		
 		this.drawMap();
 		this.drawBars();
 	}
 
 	handleChange(selectedOption) {
 
-		//this.setState({ selectedOptionSt: selectedOption.value });
 		this.setState({ selectedOptionSt: selectedOption.value }, () => {
 			this.drawChart();
 		});
-
-		//setSelectedOption(selectedOption.value);
-		//this.drawChart();
 	}
 
 	render() {
-		//return (
-		//<svg ref={this.svgRef} >
-		//	<g className="tooltip-area">
-		//		<text className="tooltip-area__text"></text>
-		//	</g>
-		//</svg>
-		//)
-		//const {dataCountiesArea} = this.state;
-
-		//debugger;
 
 		const options =
 			Object.values(this.props.data.objects.municipalities.geometries.map((item) => ({
 				value: item.properties.name,
 				label: item.properties.name.toLowerCase().replace(/^.|\s[a-z]/gi, s => s.toUpperCase()).replace(/\sD[a-z]\s/gi, s => s.toLowerCase())
 			})));
-		//Object.values(this.props.data.objects.municipalities.geometries.map(e => e.properties));
-		/*[
-			{ value: 'chocolate', label: 'Chocolate' },
-			{ value: 'strawberry', label: 'Strawberry' },
-			{ value: 'vanilla', label: 'Vanilla' }
-		  ]*/
+
 		return (
 			<Layout style={{ height: 'auto' }}>
 				<Header className="dash-header" > Painel para Visualização de Dados no Ceará</Header>
@@ -535,7 +434,7 @@ class Dashboard extends Component {
 					<Sider className="dash-sider" >
 						<Logo className='logo' />
 						<div className='siderTitle'>React + D3.Js</div>
-						<Select options={options} onChange={this.handleChange.bind(this)} style={{}} />
+						<Select options={options} onChange={this.handleChange.bind(this)} style={{}} placeholder={'Selecione'} />
 					</Sider>
 					<Content className="dash-content" >
 						<div className='container-left'>
