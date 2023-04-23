@@ -26,16 +26,17 @@ class Dashboard extends Component {
 			researchYearDensity: null,
 			dataCountiesDensity: null,
 			maxArea: null,
-			minArea: null, 
+			minArea: null,
 			maxDensity: null,
 			minDensity: null,
 			maxH: null,
 			minH: null,
-			selectedOption: 0
+			selectedOptionSt: null
 		};
 
 		//this.handleChange.bind(this);
-		this.handleChange = this.handleChange.bind(this);
+		//this.handleChange = this.handleChange.bind(this);
+		this.drawChart = this.drawChart.bind(this);
 	}
 
 	componentDidMount() {
@@ -54,7 +55,7 @@ class Dashboard extends Component {
 					groupDataArea.push({ name: dataNameArea, value: dataValuesArea });
 				}
 				//this.setState({ dataCountiesArea: groupDataArea, researchVarArea: json[0].variavel }, () => this.drawDash())
-//debugger;
+				//debugger;
 				var dataValuesIbgeDensity = json[1].resultados[0].series;
 				const researchYearDensity = Object.keys(dataValuesIbgeDensity[1].serie);
 				let dataValuesDensity = [], dataNameDensity = [], groupDataDensity = [];
@@ -69,20 +70,20 @@ class Dashboard extends Component {
 				let objArrDensity = Object.values(groupDataDensity).map(e => e.value);
 				let objH = (objArrArea, objArrDensity).map((x, i) => objArrArea[i] * objArrDensity[i]);
 
-		const maxArea = Math.max(...objArrArea),
-			minArea = Math.min(...objArrArea);
-		const maxDensity = Math.max(...objArrDensity),
-			minDensity = Math.min(...objArrDensity);
-		const maxH = Math.max(...objH),
-			minH = Math.min(...objH);
+				const maxArea = Math.max(...objArrArea),
+					minArea = Math.min(...objArrArea);
+				const maxDensity = Math.max(...objArrDensity),
+					minDensity = Math.min(...objArrDensity);
+				const maxH = Math.max(...objH),
+					minH = Math.min(...objH);
 
-				this.setState({ 
-					dataCountiesArea: groupDataArea, 
-					researchVarArea: json[0].variavel, 
-					dataCountiesDensity: groupDataDensity, 
+				this.setState({
+					dataCountiesArea: groupDataArea,
+					researchVarArea: json[0].variavel,
+					dataCountiesDensity: groupDataDensity,
 					researchVarDensity: json[1].variavel,
 					maxArea: maxArea,
-					minArea: minArea, 
+					minArea: minArea,
 					maxDensity: maxDensity,
 					minDensity: minDensity,
 					maxH: maxH,
@@ -200,6 +201,148 @@ class Dashboard extends Component {
 			.text(this.state.researchVarDensity);
 	}
 
+	drawChart(_ev, d) {
+
+		let features = ["Área", "Densidade", "Hab"];
+
+		if (_ev) { var propName = d.properties.name.toLowerCase() }
+		else { var propName = this.state.selectedOptionSt.toLowerCase() }
+
+		//var objArrArea = Object.values(this.state.dataCountiesArea).map(e => e.value);
+		//var objArrDensity = Object.values(this.state.dataCountiesArea).map(e => e.value);
+		const objArea = Object.values(this.state.dataCountiesArea).filter(e => e.name.toLowerCase() === propName)[0].value;
+		const objDensity = Object.values(this.state.dataCountiesDensity).filter(e => e.name.toLowerCase() === propName)[0].value;
+		const objH = objArea * objDensity;
+
+		const minDensity = this.state.minDensity,
+			maxDensity = this.state.maxDensity;
+		const minArea = this.state.minArea,
+			maxArea = this.state.maxArea;
+		const minH = this.state.minH,
+			maxH = this.state.maxH;
+
+		const normArea = (objArea - minArea) / (maxArea - minArea) * 100;
+		const normDensity = (objDensity - minDensity) / (maxDensity - minDensity) * 100;
+		const normH = (objH - minH) / (maxH - minH) * 100;
+
+		let data = [{ 'Área': normArea, 'Densidade': normDensity, 'Hab': normH }]
+
+		//generate the data
+		//let data = [];
+		//for (var i = 0; i < 1; i++){
+		//var point = {}
+		//each feature will be a random number from 1-9
+		//features.forEach(f => point[f] = 1 + Math.random() * 8);
+		//data.push(point);
+		//}
+
+		let width = 200, height = 200;
+
+		d3.selectAll("#svg2 > *").remove();
+		let svg = d3.select("#svg2").append("svg")
+			.attr("width", width)
+			.attr("height", height);
+
+		//let radialScale = d3.scaleLinear()
+		//.domain([0, 10])
+		//.range([0, 100]);
+
+		let radialScale = d3.scaleLinear()
+			.domain([0, 100])
+			.range([0, 100]);
+
+		//let ticks = [2, 4, 6, 8, 10];
+		let ticks = [33, 66, 100];
+
+		svg.selectAll("circle")
+			.data(ticks)
+			.join(
+				enter => enter.append("circle")
+					.attr("cx", width / 2)
+					.attr("cy", height / 2)
+					.attr("fill", "none")
+					.attr("stroke", "lightgray")
+					.attr("r", d => radialScale(d))
+			);
+
+		svg.selectAll(".ticklabel")
+			.data(ticks)
+			.join(
+				enter => enter.append("text")
+					.attr("class", "ticklabel")
+					.attr("x", width / 2 + 5)
+					.attr("y", d => height / 2 - radialScale(d))
+					.text(d => d.toString())
+			);
+
+		function angleToCoordinate(angle, value) {
+			let x = Math.cos(angle) * radialScale(value);
+			let y = Math.sin(angle) * radialScale(value);
+			return { "x": width / 2 + x, "y": height / 2 - y };
+		}
+
+		let featureData = features.map((f, i) => {
+			let angle = (Math.PI / 2) + (2 * Math.PI * i / features.length);
+			return {
+				"name": f,
+				"angle": angle,
+				"line_coord": angleToCoordinate(angle, 100),
+				"label_coord": angleToCoordinate(angle, 120)
+			};
+		});
+
+		// draw axis line
+		svg.selectAll("line")
+			.data(featureData)
+			.join(
+				enter => enter.append("line")
+					.attr("x1", width / 2)
+					.attr("y1", height / 2)
+					.attr("x2", d => d.line_coord.x)
+					.attr("y2", d => d.line_coord.y)
+					.attr("stroke", "gray")
+			);
+
+		// draw axis label
+		svg.selectAll(".axislabel")
+			.data(featureData)
+			.join(
+				enter => enter.append("text")
+					.attr("x", d => d.label_coord.x)
+					.attr("y", d => d.label_coord.y)
+					.text(d => d.name)
+			);
+
+		let line = d3.line()
+			.x(d => d.x)
+			.y(d => d.y);
+
+		let colors = ["darkorange", "gray", "navy"];
+
+		function getPathCoordinates(data_point) {
+			let coordinates = [];
+			for (var i = 0; i < features.length; i++) {
+				let ft_name = features[i];
+				let angle = (Math.PI / 2) + (2 * Math.PI * i / features.length);
+				coordinates.push(angleToCoordinate(angle, data_point[ft_name]));
+			}
+			return coordinates;
+		}
+
+		svg.selectAll("path")
+			.data(data)
+			.join(
+				enter => enter.append("path")
+					.datum(d => getPathCoordinates(d))
+					.attr("d", line)
+					.attr("stroke-width", '1px')
+					.attr("stroke", (_, i) => colors[i])
+					.attr("fill", (_, i) => colors[i])
+					.attr("stroke-opacity", 1)
+					.attr("opacity", 0.5)
+			);
+	}
+
 	drawMap() {
 
 		var svg = d3.select(this.svgRef.current);//.append("svg")
@@ -255,145 +398,7 @@ class Dashboard extends Component {
 			return color(obj);
 		}
 
-		const drawChart = (_, d) => {
 
-			let features = ["Área", "Densidade", "Hab"];
-
-			const propName = d.properties.name.toLowerCase();
-			//var objArrArea = Object.values(this.state.dataCountiesArea).map(e => e.value);
-			//var objArrDensity = Object.values(this.state.dataCountiesArea).map(e => e.value);
-			const objArea = Object.values(this.state.dataCountiesArea).filter(e => e.name.toLowerCase() === propName)[0].value;
-			const objDensity = Object.values(this.state.dataCountiesDensity).filter(e => e.name.toLowerCase() === propName)[0].value;
-			const objH = objArea * objDensity;
-
-			const minDensity = this.state.minDensity,
-				maxDensity = this.state.maxDensity;
-			const minArea = this.state.minArea,
-				maxArea = this.state.maxArea;
-			const minH = this.state.minH,
-				maxH = this.state.maxH;
-
-			const normArea = (objArea - minArea) / (maxArea - minArea) * 100;
-			const normDensity = (objDensity - minDensity) / (maxDensity - minDensity) * 100;
-			const normH = (objH - minH) / (maxH - minH) * 100;
-
-			let data = [{ 'Área': normArea, 'Densidade': normDensity, 'Hab': normH }]
-			
-			//generate the data
-			//let data = [];
-			//for (var i = 0; i < 1; i++){
-			//var point = {}
-			//each feature will be a random number from 1-9
-			//features.forEach(f => point[f] = 1 + Math.random() * 8);
-			//data.push(point);
-			//}
-
-			let width = 200, height = 200;
-
-			d3.selectAll("#svg2 > *").remove();
-			let svg = d3.select("#svg2").append("svg")
-				.attr("width", width)
-				.attr("height", height);
-
-			//let radialScale = d3.scaleLinear()
-			//.domain([0, 10])
-			//.range([0, 100]);
-
-			let radialScale = d3.scaleLinear()
-				.domain([0, 100])
-				.range([0, 100]);
-
-			//let ticks = [2, 4, 6, 8, 10];
-			let ticks = [33, 66, 100];
-
-			svg.selectAll("circle")
-				.data(ticks)
-				.join(
-					enter => enter.append("circle")
-						.attr("cx", width / 2)
-						.attr("cy", height / 2)
-						.attr("fill", "none")
-						.attr("stroke", "lightgray")
-						.attr("r", d => radialScale(d))
-				);
-
-			svg.selectAll(".ticklabel")
-				.data(ticks)
-				.join(
-					enter => enter.append("text")
-						.attr("class", "ticklabel")
-						.attr("x", width / 2 + 5)
-						.attr("y", d => height / 2 - radialScale(d))
-						.text(d => d.toString())
-				);
-
-			function angleToCoordinate(angle, value) {
-				let x = Math.cos(angle) * radialScale(value);
-				let y = Math.sin(angle) * radialScale(value);
-				return { "x": width / 2 + x, "y": height / 2 - y };
-			}
-
-			let featureData = features.map((f, i) => {
-				let angle = (Math.PI / 2) + (2 * Math.PI * i / features.length);
-				return {
-					"name": f,
-					"angle": angle,
-					"line_coord": angleToCoordinate(angle, 100),
-					"label_coord": angleToCoordinate(angle, 120)
-				};
-			});
-
-			// draw axis line
-			svg.selectAll("line")
-				.data(featureData)
-				.join(
-					enter => enter.append("line")
-						.attr("x1", width / 2)
-						.attr("y1", height / 2)
-						.attr("x2", d => d.line_coord.x)
-						.attr("y2", d => d.line_coord.y)
-						.attr("stroke", "gray")
-				);
-
-			// draw axis label
-			svg.selectAll(".axislabel")
-				.data(featureData)
-				.join(
-					enter => enter.append("text")
-						.attr("x", d => d.label_coord.x)
-						.attr("y", d => d.label_coord.y)
-						.text(d => d.name)
-				);
-
-			let line = d3.line()
-				.x(d => d.x)
-				.y(d => d.y);
-
-			let colors = ["darkorange", "gray", "navy"];
-
-			function getPathCoordinates(data_point) {
-				let coordinates = [];
-				for (var i = 0; i < features.length; i++) {
-					let ft_name = features[i];
-					let angle = (Math.PI / 2) + (2 * Math.PI * i / features.length);
-					coordinates.push(angleToCoordinate(angle, data_point[ft_name]));
-				}
-				return coordinates;
-			}
-
-			svg.selectAll("path")
-				.data(data)
-				.join(
-					enter => enter.append("path")
-						.datum(d => getPathCoordinates(d))
-						.attr("d", line)
-						.attr("stroke-width", '1px')
-						.attr("stroke", (_, i) => colors[i])
-						.attr("fill", (_, i) => colors[i])
-						.attr("stroke-opacity", 1)
-						.attr("opacity", 0.5)
-				);
-		};
 
 		//var tooltip = d3.select('.tooltip-area').style('opacity', 0);
 
@@ -427,7 +432,7 @@ class Dashboard extends Component {
 			//const filteredItem = groupData.filter(e => e.name.toLocaleLowerCase() === propName);
 			const filteredItem = this.state.dataCountiesArea.filter(e => e.name.toLocaleLowerCase() === propName);
 			//cons t values = Object.values(filteredItem[0])
-			
+
 
 			//const text = d3.select('.tooltip-area__text');
 			//text.text(`${d.properties.name.toString().toLowerCase()} ${ba[0].val} `);	
@@ -470,7 +475,7 @@ class Dashboard extends Component {
 				//tooltip.style('opacity', 0);
 				Tooltip.style("opacity", 0);
 			})
-			.on("click", drawChart);
+			.on("click", this.drawChart);
 	}
 
 	drawDash() {
@@ -488,13 +493,16 @@ class Dashboard extends Component {
 		this.drawMap();
 		this.drawBars();
 	}
-	
-	handleChange (selectedOption) {
-		console.log(selectedOption);
-		this.setState({ selectedOption: selectedOption.value});
+
+	handleChange(selectedOption) {
+
+		//this.setState({ selectedOptionSt: selectedOption.value });
+		this.setState({ selectedOptionSt: selectedOption.value }, () => {
+			this.drawChart();
+		});
+
 		//setSelectedOption(selectedOption.value);
-		//this.drawMap().drawChart(selectedOption);
-		//debugger;
+		//this.drawChart();
 	}
 
 	render() {
@@ -506,14 +514,14 @@ class Dashboard extends Component {
 		//</svg>
 		//)
 		//const {dataCountiesArea} = this.state;
-		
+
 		//debugger;
 
-		const options = 
+		const options =
 			Object.values(this.props.data.objects.municipalities.geometries.map((item) => ({
-					value: item.properties.name,
-					label: item.properties.name.toLowerCase().replace(/^.|\s[a-z]/gi, s => s.toUpperCase()).replace(/\sD[a-z]\s/gi, s => s.toLowerCase())
-				})));
+				value: item.properties.name,
+				label: item.properties.name.toLowerCase().replace(/^.|\s[a-z]/gi, s => s.toUpperCase()).replace(/\sD[a-z]\s/gi, s => s.toLowerCase())
+			})));
 		//Object.values(this.props.data.objects.municipalities.geometries.map(e => e.properties));
 		/*[
 			{ value: 'chocolate', label: 'Chocolate' },
@@ -527,7 +535,7 @@ class Dashboard extends Component {
 					<Sider className="dash-sider" >
 						<Logo className='logo' />
 						<div className='siderTitle'>React + D3.Js</div>
-						<Select options={options} onChange={this.handleChange} style={{}} />
+						<Select options={options} onChange={this.handleChange.bind(this)} style={{}} />
 					</Sider>
 					<Content className="dash-content" >
 						<div className='container-left'>
