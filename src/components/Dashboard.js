@@ -1,8 +1,6 @@
 import React, { Component, createRef } from 'react';
 import * as d3 from "d3";
 import * as topojson from "topojson";
-//import type { MenuProps } from 'antd';
-//import { Breadcrumb, Layout, Menu, theme } from 'antd';
 import { Layout } from 'antd';
 import "../css/main.css";
 import { ReactComponent as Logo } from '../images/logo.svg';
@@ -34,8 +32,6 @@ class Dashboard extends Component {
 			selectedOptionSt: null
 		};
 
-		//this.handleChange.bind(this);
-		//this.handleChange = this.handleChange.bind(this);
 		this.drawChart = this.drawChart.bind(this);
 	}
 
@@ -54,7 +50,6 @@ class Dashboard extends Component {
 					dataValuesArea = (parseFloat(dataValuesIbgeArea[i].serie[researchYearArea]));
 					groupDataArea.push({ name: dataNameArea, value: dataValuesArea });
 				}
-				//this.setState({ dataCountiesArea: groupDataArea, researchVarArea: json[0].variavel }, () => this.drawDash())
 
 				var dataValuesIbgeDensity = json[1].resultados[0].series;
 				const researchYearDensity = Object.keys(dataValuesIbgeDensity[1].serie);
@@ -95,7 +90,6 @@ class Dashboard extends Component {
 	drawBars() {
 
 		var data = this.state.dataCountiesDensity;
-		//d3.select('#title-bar').html(this.state.researchVarArea);
 		data = data.sort(function (a, b) {
 			return d3.descending(a.value, b.value);
 		})
@@ -112,7 +106,7 @@ class Dashboard extends Component {
 		var x = d3.scaleLinear()
 			.range([0, width]);
 
-		var svg = d3.select("#bar-graph").append("svg")
+		var svg = d3.select("#barGraph").append("svg")
 			.attr("width", width + margin.left + margin.right)
 			.attr("height", height + margin.top + margin.bottom)
 			.append("g")
@@ -123,7 +117,7 @@ class Dashboard extends Component {
 			.attr("y", 0)
 			.attr("height", height + 0)
 			.attr("width", width + margin.right)
-			.attr("class", "foo");
+			.attr("class", "borderGraph");
 
 		var color = d3.scaleLinear()
 			.domain([1, 10])
@@ -132,7 +126,7 @@ class Dashboard extends Component {
 		x.domain([0, d3.max(data, function (d) { return d.value; })])
 		y.domain(data.map(function (d) { return d.name; }));
 
-		var Tooltip = d3.select("#tooltipId2")
+		var tooltip = d3.select("#tooltipIdBar")
 			.append("div")
 			.style("opacity", 0)
 			.attr("class", "tooltip")
@@ -143,7 +137,7 @@ class Dashboard extends Component {
 			.style("padding", "5px");
 
 		var mouseover = function (d) {
-			Tooltip
+			tooltip
 				.style("opacity", 1)
 			d3.select(this)
 				.style("stroke", "black")
@@ -151,14 +145,14 @@ class Dashboard extends Component {
 		}
 
 		var mousemove = function (event, d) {
-			Tooltip
+			tooltip
 				.html("Densidade: " + d.value + " hab/km<sup>2</sup>.")
 				.style("left", (event.pageX + 20) + "px")
 				.style("top", (event.pageY - 10) + "px");
 		}
 
 		var mouseleave = function (d) {
-			Tooltip
+			tooltip
 				.style("opacity", 0);
 			d3.select(this)
 				.style("stroke", "none")
@@ -184,24 +178,34 @@ class Dashboard extends Component {
 		svg.append("g")
 			.call(d3.axisLeft(y));
 
-		svg.append("text")
-			.attr("x", (width / 2))
-			.attr("y", 0 - (margin.top / 2))
-			.attr("text-anchor", "middle")
-			.style("font-size", "16px")
+		//svg.append("text")
+			//.attr("x", (width / 2))
+			//.attr("y", 0 - (margin.top / 2))
+			//.attr("text-anchor", "middle")
+			//.attr('class', 'titleBar')
+			//.style('color', 'red')
+			//.style("font-size", "16px")
+			//.style('font-weight', '500')
 			//.style("text-decoration", "underline")  
-			.text(this.state.researchVarDensity);
+			//.text(this.state.researchVarDensity)
+			//.html('10 municípios com maior densidade');
 	}
 
-	drawChart(event, d) {
+	drawChart(event, d) { 
+
+		const elementsContainerCenter = document.querySelector('div.containerCenter');
+		if (elementsContainerCenter) {
+			var elementStyle = elementsContainerCenter.style.display; 
+			if (elementStyle === '' || elementStyle === 'none' ) {
+				elementsContainerCenter.style.display = 'flex';
+			}
+		}
 
 		let features = ["Área", "Densidade", "Hab"];
 		let propName = [];
 		if (event) { propName = d.properties.name.toLowerCase() }
 		else { propName = this.state.selectedOptionSt.toLowerCase() }
 
-		//var objArrArea = Object.values(this.state.dataCountiesArea).map(e => e.value);
-		//var objArrDensity = Object.values(this.state.dataCountiesArea).map(e => e.value);
 		const objArea = Object.values(this.state.dataCountiesArea).filter(e => e.name.toLowerCase() === propName)[0].value;
 		const objDensity = Object.values(this.state.dataCountiesDensity).filter(e => e.name.toLowerCase() === propName)[0].value;
 		const objH = objArea * objDensity;
@@ -221,8 +225,8 @@ class Dashboard extends Component {
 
 		let width = 200, height = 200;
 
-		d3.selectAll("#svg2 > *").remove();
-		let svg = d3.select("#svg2").append("svg")
+		d3.selectAll("#svgRadar > *").remove();
+		let svg = d3.select("#svgRadar").append("svg")
 			.attr("width", width)
 			.attr("height", height);
 
@@ -243,11 +247,11 @@ class Dashboard extends Component {
 					.attr("r", d => radialScale(d))
 			);
 
-		svg.selectAll(".ticklabel")
+		svg.selectAll(".tickLabel")
 			.data(ticks)
 			.join(
 				enter => enter.append("text")
-					.attr("class", "ticklabel")
+					.attr("class", "tickLabel")
 					.attr("x", width / 2 + 5)
 					.attr("y", d => height / 2 - radialScale(d))
 					.text(d => d.toString())
@@ -280,13 +284,15 @@ class Dashboard extends Component {
 					.attr("stroke", "gray")
 			);
 
-		svg.selectAll(".axislabel")
+		svg.selectAll(".axisLabel")
 			.data(featureData)
 			.join(
 				enter => enter.append("text")
+					.attr("class", "axisLabel")
 					.attr("x", d => d.label_coord.x)
 					.attr("y", d => d.label_coord.y)
 					.text(d => d.name)
+					.attr("fill", "#737373") 
 			);
 
 		let line = d3.line()
@@ -321,16 +327,16 @@ class Dashboard extends Component {
 
 	drawMap() {
 
-		var svg = d3.select(this.svgRef.current);//.append("svg")
+		var svg = d3.select(this.svgRef.current);
 
-		svg.attr("viewBox", "0 0 500 700")//.attr("id", "svg")
+		svg.attr("viewBox", "0 0 500 500")
 			.attr("preserveAspectRatio", "xMidYMid meet")
 			.style("cursor", "auto");
-		svg.attr("width", 400).attr("height", 600);
+		svg.attr("width", 400).attr("height", 450);
 
-		var mapa = svg.append("g");//.attr("class", "mapa").attr("id", "mapaid");
+		var mapa = svg.append("g").attr("class", "mapa").attr("id", "mapaid");
 
-		var projection = d3.geoMercator().scale(5800).rotate([0, 0]).center([-37.3, -4.50]);
+		var projection = d3.geoMercator().scale(5800).rotate([0, 0]).center([-37.120, -5.230]);
 
 		var path = d3.geoPath().projection(projection);
 
@@ -351,7 +357,7 @@ class Dashboard extends Component {
 			return color(obj);
 		}
 
-		var Tooltip = d3.select("#tooltipId")
+		var tooltip = d3.select("#tooltipId")
 			.append("div")
 			.style("opacity", 0)
 			.attr("class", "tooltip")
@@ -366,12 +372,13 @@ class Dashboard extends Component {
 			const currentPath = d3.select(this);
 			var currentColor = currentPath.style('fill');
 
-			currentPath//.transition()
-				.style("stroke", "white").style("stroke-width", 2).style("opacity", 0.25)
-				//.style('fill', 'white')
+			currentPath
+				.style("stroke", "white")
+				.style("stroke-width", 2)
+				.style("opacity", 0.25)
 				.style("cursor", "pointer");
 
-			Tooltip.style("opacity", 1);
+			tooltip.style("opacity", 1);
 		};
 
 		const mouseMove = (event, d) => {
@@ -379,7 +386,7 @@ class Dashboard extends Component {
 			const propName = d.properties.name.toLocaleLowerCase();
 			const filteredItem = this.state.dataCountiesArea.filter(e => e.name.toLocaleLowerCase() === propName);
 
-			Tooltip
+			tooltip
 				.html(`${propName.split(' ').map(str => str.replace(/^./, s => s.toUpperCase())).join(' ').replace(/\sD[aeiou]\s/g, ss => ss.toLocaleLowerCase())} `)
 				.style("left", (event.pageX + 20) + "px")
 				.style("top", (event.pageY) + "px");
@@ -396,12 +403,13 @@ class Dashboard extends Component {
 			//.attr('fill', '#e7d8ad')
 			//.attr('fill', function (d, i) { return color(i); })
 			.attr('fill', coloring)
+			.text('teste')
 			.on("mousemove", mouseMove)
 			.on('mouseover', mouseOver)
 			.on('mouseout', function (d) {
 				d3.select(this)
 					.style("stroke", null).style("fill", null).style("stroke-width", 0.5).style('opacity', 1);
-				Tooltip.style("opacity", 0);
+				tooltip.style("opacity", 0);
 			})
 			.on("click", this.drawChart);
 	}
@@ -419,6 +427,11 @@ class Dashboard extends Component {
 		});
 	}
 
+	handleClick ()  {
+		const containerCenter = document.querySelector('div.containerCenter');
+		if (containerCenter.style.display === 'flex') {containerCenter.style.display = 'none';}
+	}
+
 	render() {
 
 		const options =
@@ -428,35 +441,39 @@ class Dashboard extends Component {
 			})));
 
 		return (
-			<Layout style={{ height: 'auto' }}>
-				<Header className="dash-header" > Painel para Visualização de Dados no Ceará</Header>
-				<Layout>
-					<Sider className="dash-sider" >
+			<Layout className='dashLayout' style={{height: '100vh'}}>
+				<Header className="dashHeader" > Painel para Visualização de Dados no Ceará</Header>
+				<Layout className='dashLayoutContent' >
+					<Sider className="dashSider" >
 						<Logo className='logo' />
 						<div className='siderTitle'>React + D3.Js</div>
-						<Select options={options} onChange={this.handleChange.bind(this)} style={{}} placeholder={'Selecione'} />
+						<div className='filterDesc' >Filtro para exibição dos dados</div>
+						<Select options={options} onChange={this.handleChange.bind(this)} placeholder={'Selecione'} />
 					</Sider>
-					<Content className="dash-content" >
-						<div className='container-left'>
+					<Content className="dashContent" >
+						<div className='containerLeft'>
+							<span className='mapTitle'>Mapa da densidade demogáfica no Ceará</span>
 							<svg ref={this.svgRef} />
 							<div id="tooltipId" />
+							<div className='mapFootNote'>Selecione o município no Mapa<br/> para exibir os dados.</div>
 						</div>
-						<div className='container-center'>
-							<svg ref={this.svgRef2} className='' id='svg2' />
+						<div className='containerCenter'>
+							<svg ref={this.svgRef2} className='' id='svgRadar' />
+							<button type="button" className='button' onClick={this.handleClick} />
 						</div>
-						<div className='container-right'>
-							{/*<span id='title-bar'>untitled</span>*/}
-							<svg id='bar-graph' />
-							<div id="tooltipId2" />
+						<div className='containerRight'>
+							<span className='barGraphTitle'>10 Municípios com maior densidade no Ceará</span>
+							<svg id='barGraph' />
+							<div id="tooltipIdBar" />
 						</div>
 					</Content>
 				</Layout>
-				<Footer>
-					<div style={{ marginTop: 0 }}>
-						<span style={{ marginBottom: 0 }}>Desenvolvido por <a href='https://github.com/fbritojunior'>@fbritojunior</a>. </span>
+				{/*<Footer>
+					<div>
+						<span>Desenvolvido por <a href='https://github.com/fbritojunior'>@fbritojunior</a>. </span>
 						<span>Código fonte disponível em <a href='https://github.com/fbritojunior/observaCE-Dashboard'>https://github.com/</a></span>
 					</div>
-				</Footer>
+		</Footer>*/}
 			</Layout>
 		)
 	}

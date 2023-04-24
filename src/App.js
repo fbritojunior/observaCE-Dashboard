@@ -1,6 +1,6 @@
 import React, { Component } from 'react';
 import Dashboard from './components/Dashboard'
-import './css/App.css'
+//import './css/App.css'
 
 let data_ = require('./data/ce-municipalities_topo.json');
 
